@@ -1,0 +1,217 @@
+<form class="mt-5" method="POST" action="/courses/form-actions" name="form-container">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-10">
+        <h3>Deleted Courses</h3>
+      </div>
+      <div class="col-lg-2">
+        <a href="/me/courses/store">My Courses Store</a>
+      </div>
+
+    </div>
+    <div class="row">
+      <div class="col-lg-2 form-check mt-2">
+        <input
+          id="check-all"
+          class="form-check-input"
+          type="checkbox"
+          value=""
+        />
+        <label class="form-check-label" for="check-all">
+          Check All
+        </label>
+      </div>
+      <div class="col-lg-8">
+        <select class="form-select" aria-label="Default select example" name="action" required>
+          <option selected>Open this select menu</option>
+          <option value="return">Return</option>
+          <option value="delete">Delete</option>
+        </select>
+      </div>
+      <div class="col-lg-2">
+        <button class="btn btn-primary btn-check-all-submit disabled" >Practice</button>
+      </div>
+    </div>
+
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col" colspan="2">#</th>
+          <th scope="col">Course Name</th>
+          <th scope="col">Lever</th>
+          <th scope="col" colspan="2">Deleted At</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each courses}}
+          <tr>
+              <th>
+                  <div class="col-sm-2 form-check">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      value="{{this._id}}"
+                      name="courseIds[]"
+                      id="flexCheckChecked"
+                    />
+                  </div>
+              </th>
+
+            </th>
+            <th scope="row">{{sum @index 1}}</th>
+            <td>{{this.name}}</td>
+            <td>{{this.lever}}</td>
+            <td>{{this.deletedAt}}</td>
+            <td>
+              <a
+                href=""
+                class="btn btn-primary btn-restore "
+                data-id="{{this._id}}"
+              >Return</a>
+              <a
+                href=""
+                class="btn btn-danger"
+                data-bs-toggle="modal"
+                data-bs-id="{{this._id}}"
+                data-bs-target="#delete-course"
+              >Delete permanently</a>
+            </td>
+          </tr>
+        {{else}}
+          <tr>
+            <td colspan="5" class="text-center">
+              No Data
+              <a href="/me/courses/store">My Courses Store</a>
+            </td>
+
+          </tr>
+        {{/each}}
+
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{{! CF Delete Courses }}
+
+<!-- Modal -->
+<div
+  class="modal fade"
+  id="delete-course"
+  tabindex="-1"
+  aria-labelledby="exampleModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Delete Course</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to delete?
+      </div>
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          data-bs-dismiss="modal"
+        >Cancel</button>
+        <button
+          id="btn-delete-course"
+          type="button"
+          class="btn btn-danger"
+        >Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+{{! Delete formr }}
+
+<form name="delete-form" method="post"></form>
+<form name="restore-form" method="post"></form>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var courseId; 
+        var deleteForm = document.forms['delete-form']; 
+        var exampleModal = document.getElementById('delete-course');
+
+        exampleModal.addEventListener('show.bs.modal', function (event) { 
+            var button = event.relatedTarget; 
+            courseId = button.getAttribute('data-bs-id'); 
+            
+        }); 
+        var btnDeleteCourse = $('#delete-course');
+
+        btnDeleteCourse.click(function () { 
+            deleteForm.action = '/me/courses/' +
+            courseId + '/force/?_method=DELETE'; 
+            deleteForm.submit(); 
+            
+        });
+
+        var btnRestore = $('.btn-restore');
+        var restoreForm = document.forms['restore-form'];
+        btnRestore.click( function(e) {
+            e.preventDefault();
+            courseId = $(this).data('id');
+            //console.log(id);
+
+            restoreForm.action = '/me/courses/' + courseId + '/restore?_method=PATCH';
+            restoreForm.submit();
+
+        });
+
+        //============================================================================
+        //checkbox
+
+        var checkAll = $('#check-all');
+        var flexCheckCheckedItems = $('input[name="courseIds[]"]');
+
+        checkAll.change(function() {
+          var isCheckAll = $(this).prop('checked');
+          flexCheckCheckedItems.prop('checked', isCheckAll);
+          Practice();
+        });
+
+        flexCheckCheckedItems.change(function() {
+         var isCheckAll = flexCheckCheckedItems.length === $('input[name="courseIds[]"]:checked').length;
+         checkAll.prop('checked', isCheckAll);
+         Practice();
+        });
+
+       //Practice
+       var btnPractice = $('.btn-check-all-submit');
+      function Practice() {
+        var isCheckAcount = $('input[name="courseIds[]"]:checked').length;
+
+        console.log(isCheckAcount);
+        if(isCheckAcount > 0) {
+          btnPractice.removeClass('disabled');
+        } else {
+          btnPractice.addClass('disabled');
+        }
+      }
+
+      var formContainer = $('form[name="form-container"]');
+
+      formContainer.on('submit', function(e) {
+
+        var isSubmit = !btnPractice.hasClass('disabled');
+        if(!isSubmit) {
+          e.preventDefault();
+        }
+      })
+
+      console.log(formContainer);
+ 
+    })
+
+</script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

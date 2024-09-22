@@ -1,0 +1,243 @@
+<form method="post" action="/courses/handle-form-actions" name="form-container" class="mt-5">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-10">
+        <h3>My Courses</h3>
+      </div>
+      <div class="col-lg-2">
+        <a href="/me/courses/trash">Trash</a>
+      </div>
+
+    </div>
+    <div class="row">
+      <div class="col-lg-2 form-check mt-2">
+        <input
+          id="check-all"
+          class="form-check-input"
+          type="checkbox"
+          value=""
+          id="check-all"
+        />
+        <label class="form-check-label" for="check-all">
+          Check All
+        </label>
+      </div>
+      <div class="col-lg-8">
+        <select class="form-select" aria-label="Default select example" name="action" required>
+          <option selected>Open this select menu</option>
+          <option value="delete">Delete</option>
+        </select>
+      </div>
+      <div class="col-lg-2">
+        <button class="btn btn-primary btn-check-all-submit disabled" >Practice</button>
+      </div>
+    </div>
+
+    <table class="table">
+      <thead>
+        <tr>
+          <th></th>
+          <th scope="col">#</th>
+          <th scope="col">
+            Course Name
+            {{{sortTable 'name' _sort}}}
+          </th> 
+          <th scope="col">
+            Lever
+            {{{sortTable 'lever' _sort}}}
+          </th>
+          <th scope="col" colspan="2">
+            Create At
+            {{{sortTable 'createdAt' _sort}}}
+            </th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each courses}}
+
+          <tr>
+            <th>
+              <div class="col-sm-2 form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  value="{{this._id}}"
+                  name="courseIds[]"
+                  id="flexCheckChecked"
+                />
+              </div>
+            </th>
+            <th scope="row">{{sum @index 1}}</th>
+            <td>{{this.name}}</td>
+            <td>{{this.lever}}</td>
+            <td>{{this.createdAt}}</td>
+            <td>
+              <a
+                href="/me/courses/{{this._id}}/edit"
+                class="btn btn-primary"
+              >Edit</a>
+              <a
+                href="#"
+                class="btn btn-danger"
+                data-bs-toggle="modal"
+                data-bs-id="{{this._id}}"
+                data-bs-target="#delete-course"
+              >Delete</a>
+            </td>
+          </tr>
+        {{else}}
+          <tr>
+            <td colspan="5" class="text-center">
+              No Data
+              <a href="/courses/create">Create Course</a>
+            </td>
+
+          </tr>
+        {{/each}}
+
+      </tbody>
+    </table>
+  </div>
+</form>
+
+{{! CF Delete Courses }}
+
+<!-- Modal -->
+<div
+  class="modal fade"
+  id="delete-course"
+  tabindex="-1"
+  aria-labelledby="exampleModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Delete Course</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to delete?
+      </div>
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          data-bs-dismiss="modal"
+        >Cancel</button>
+        <button
+          id="btn-delete-course"
+          type="button"
+          class="btn btn-danger"
+        >Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+{{! Delete formr }}
+
+<form name="delete-form" method="post"></form>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    
+     var courseId; 
+     var deleteForm = document.forms['delete-form']; 
+     var exampleModal = document.getElementById('delete-course');
+
+    exampleModal.addEventListener('show.bs.modal', function (event) { 
+      var button = event.relatedTarget; 
+      courseId = button.getAttribute('data-bs-id'); }); 
+      var btnDeleteCourse = document.getElementById('btn-delete-course');
+
+      btnDeleteCourse.onclick = function () {
+
+        deleteForm.action = '/me/courses/' + courseId + '?_method=DELETE'; 
+        deleteForm.submit(); }; 
+
+
+        
+        // check all var
+        checkBoxAll = $('#check-all'); 
+        
+        console.log(checkBoxAll); 
+
+        var courseItemCheckbox = $('input[name="courseIds[]"]');
+
+        console.log(courseItemCheckbox); 
+        
+        checkBoxAll.change(function() { 
+
+          var ischeckedAll = $(this).prop('checked'); 
+          
+          console.log(ischeckedAll);
+
+          if(ischeckedAll) { 
+            courseItemCheckbox.prop('checked', true); // check all  === true thi check all cac chekbox khac
+          } else {
+            courseItemCheckbox.prop('checked', false);
+          }
+
+          Practice();
+
+        });
+
+        // khi bo 1 checkbox o item con thi checkbox all cung bo
+        courseItemCheckbox.change(function() {
+          // so sanh so luong dang checked va so luong item co bang nhau hay khong
+
+          var isCheckItemAll = courseItemCheckbox.length === $('input[name="courseIds[]"]:checked').length;
+
+          console.log(isCheckItemAll); // check het === true
+
+          checkBoxAll.prop('checked', isCheckItemAll);
+
+          Practice();
+
+        });
+
+        // viet ham thuc hien cho nut Practice
+        var submitBtn = $('.btn-check-all-submit');
+        function Practice() {
+          var checkedCount = $('input[name="courseIds[]"]:checked').length;
+
+          console.log(checkedCount);
+
+          if(checkedCount > 0) {
+            submitBtn.removeClass('disabled');
+          } else {
+            submitBtn.addClass('disabled');
+          }
+        };
+
+        // Form submit
+
+        var formContainer = document.forms['form-container']; 
+/*
+        submitBtn.click(function(e) {
+          var isSubmit = !$(this).hasClass('disabled');
+          console.log(isSubmit);
+          if(isSubmit) {
+            formContainer.submit();
+          }
+
+        }); */
+
+        submitBtn.on('submit', function(e) {
+          var isSubmit = !$(this).hasClass('disabled');
+          console.log(isSubmit);
+          if(!isSubmit) {
+            e.preventDefault();
+          }
+
+        })
+
+  
+  })
+
+</script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
